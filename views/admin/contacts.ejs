@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administración de Contactos - 3D Print Lab</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/gsap@3.12.2/dist/gsap.min.js"></script>
+</head>
+<body class="bg-gray-100">
+    <nav class="bg-primary text-white p-4 shadow-lg sticky top-0 z-50">
+        <div class="container mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-4">
+                <h1 style="color: black;" class="text-2xl font-bold">Administración de Contactos</h1>
+                <span class="bg-secondary/20 text-black px-3 py-1 rounded-full text-sm">Admin</span>
+            </div>
+            <div class="flex items-center space-x-4">
+                <a href="/admin" class="text-black hover:text-secondary transition-colors flex items-center space-x-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 15l-3-3m0 0l3-3m-3 3h8M3 12a9 9 0 1118 0 9 9 0 01-18 0z"></path>
+                    </svg>
+                    <span>Volver al Panel</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+    <div class="container mx-auto px-4 py-8">
+        <div class="flex justify-between items-center mb-8">
+            <h1 class="text-3xl font-bold">Administración de Contactos</h1>
+            <div class="flex space-x-4">
+                <input type="text" id="searchInput" placeholder="Buscar..." class="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:outline-none transition-all duration-300">
+                <select id="filterSelect" class="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:outline-none transition-all duration-300">
+                    <option value="all">Todos</option>
+                    <option value="today">Hoy</option>
+                    <option value="week">Esta semana</option>
+                    <option value="month">Este mes</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors duration-200">ID</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors duration-200">Nombre</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors duration-200">Email</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors duration-200">Comentario</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors duration-200">IP</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors duration-200">Fecha</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200" id="contactsTableBody">
+                    <% contacts.forEach((contact, index) => { %>
+                        <tr class="contact-row hover:bg-gray-50 transition-colors duration-200" data-index="<%= index %>">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><%= contact.id %></td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"><%= contact.name %></td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><%= contact.email %></td>
+                            <td class="px-6 py-4 text-sm text-gray-500 max-w-md truncate"><%= contact.comment %></td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><%= contact.ip_address %></td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><%= new Date(contact.created_at).toLocaleString() %></td>
+                        </tr>
+                    <% }); %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Animación de entrada para las filas
+        gsap.from('.contact-row', {
+            duration: 0.5,
+            opacity: 0,
+            y: 20,
+            stagger: 0.1,
+            ease: 'power2.out'
+        });
+
+        // Funcionalidad de búsqueda
+        const searchInput = document.getElementById('searchInput');
+        const filterSelect = document.getElementById('filterSelect');
+        const rows = document.querySelectorAll('.contact-row');
+
+        function filterContacts() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const filterValue = filterSelect.value;
+            const now = new Date();
+
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                const date = new Date(row.querySelector('td:last-child').textContent);
+                let showByDate = true;
+
+                if (filterValue === 'today') {
+                    showByDate = date.toDateString() === now.toDateString();
+                } else if (filterValue === 'week') {
+                    const weekAgo = new Date(now - 7 * 24 * 60 * 60 * 1000);
+                    showByDate = date >= weekAgo;
+                } else if (filterValue === 'month') {
+                    showByDate = date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
+                }
+
+                const show = text.includes(searchTerm) && showByDate;
+                row.style.display = show ? '' : 'none';
+
+                if (show) {
+                    gsap.to(row, {
+                        opacity: 1,
+                        y: 0,
+                        duration: 0.3,
+                        ease: 'power2.out'
+                    });
+                }
+            });
+        }
+
+        searchInput.addEventListener('input', filterContacts);
+        filterSelect.addEventListener('change', filterContacts);
+    </script>
+</body>
+</html>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>
