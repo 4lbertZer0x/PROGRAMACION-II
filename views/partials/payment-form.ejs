@@ -1,0 +1,122 @@
+<!-- Formulario de Pago -->
+<%- include('success-notification') %>
+<div class="fixed inset-0 bg-black bg-opacity-50 hidden" id="paymentModal">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md relative">
+            <button type="button" class="absolute top-4 right-4 text-gray-400 hover:text-gray-500" onclick="closePaymentModal()">
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+
+            <div class="p-6">
+                <h3 class="text-2xl font-bold text-gray-900 mb-6">Realizar Pago</h3>
+                <form id="paymentForm" action="/payment/add" method="POST" class="space-y-4">
+                    <input type="hidden" name="service_type" id="serviceType">
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Correo electrónico</label>
+                        <input type="email" name="email" required
+                            class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-primary focus:border-primary">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Nombre del titular</label>
+                        <input type="text" name="cardholder_name" required
+                            class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-primary focus:border-primary">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Monto</label>
+                            <input type="number" name="amount" required min="0" step="0.01"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-primary focus:border-primary">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Moneda</label>
+                            <select name="currency" required
+                                class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-primary focus:border-primary">
+                                <option value="EUR">EUR</option>
+                                <option value="USD">USD</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Número de tarjeta</label>
+                        <input type="text" name="card_number" required pattern="[0-9 -]{16,19}"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-primary focus:border-primary"
+                            placeholder="1234 5678 9012 3456"
+                            title="Ingrese un número de tarjeta válido (16-19 dígitos, puede incluir espacios o guiones)">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Fecha de expiración</label>
+                            <div class="grid grid-cols-2 gap-2">
+                                <select name="exp_month" required
+                                    class="px-2 py-2 border border-gray-300 rounded-md focus:ring-primary focus:border-primary">
+                                    <% for(let i = 1; i <= 12; i++) { %>
+                                        <option value="<%= i.toString().padStart(2, '0') %>"><%= i.toString().padStart(2, '0') %></option>
+                                    <% } %>
+                                </select>
+                                <select name="exp_year" required
+                                    class="px-2 py-2 border border-gray-300 rounded-md focus:ring-primary focus:border-primary">
+                                    <% const currentYear = new Date().getFullYear(); %>
+                                    <% for(let i = 0; i < 10; i++) { %>
+                                        <option value="<%= currentYear + i %>"><%= currentYear + i %></option>
+                                    <% } %>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">CVV</label>
+                            <input type="text" name="cvv" required pattern="[0-9]{3,4}"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-primary focus:border-primary"
+                                placeholder="123">
+                        </div>
+                    </div>
+
+                    <button type="submit"
+                        class="w-full bg-primary text-white font-medium py-3 px-4 rounded-md hover:bg-opacity-90 transition duration-300">
+                        Procesar Pago
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function openPaymentModal(serviceType) {
+    document.getElementById('serviceType').value = serviceType;
+    document.getElementById('paymentModal').classList.remove('hidden');
+}
+
+function closePaymentModal() {
+    document.getElementById('paymentModal').classList.add('hidden');
+}
+
+document.getElementById('paymentForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    try {
+        const formData = new FormData(e.target);
+        const response = await fetch('/payment/add', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(Object.fromEntries(formData)),
+        });
+
+        if (response.ok) {
+            showSuccessNotification();
+        } else {
+            throw new Error('Error al procesar el pago');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error al procesar el pago. Por favor, intente nuevamente.');
+    }
+});
+</script>
