@@ -17,7 +17,7 @@
     "express-validator": "^7.2.1",
     "nodemailer": "^7.0.3",
     "sqlite3": "^5.1.7",
-    "@types/express": "^4.17.22" // Movido a dependencies para Render
+    "@types/express": "^4.17.22"
   },
   "devDependencies": {
     "@types/node": "^20.11.30",
