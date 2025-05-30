@@ -8,11 +8,6 @@
 
 ## Variables de Entorno
 - Se utiliza el paquete `dotenv` para gestionar credenciales sensibles.
-- Ejemplo de variables en `.env`:
-  ```env
-  # API key de ipstack
-  IPSTACK_API_KEY=fce3c3afc87c15a082f462a023ac9232
-  ```
 - El archivo `.env` está incluido en `.gitignore` para evitar exponer información sensible.
 
 ## Instalación de dependencias
