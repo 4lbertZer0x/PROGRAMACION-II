@@ -73,6 +73,13 @@ export class PaymentsController {
                 }
             }
 
+            // Generar ID de transacción único si no se proporciona uno
+            const generateTransactionId = (): string => {
+                const timestamp = Date.now().toString();
+                const random = Math.random().toString(36).substring(2, 8).toUpperCase();
+                return `TXN-${timestamp}-${random}`;
+            };
+
             // Crear objeto de pago (evitando almacenar datos sensibles de tarjeta)
             const payment: Payment = {
                 email: req.body.email,
@@ -81,7 +88,9 @@ export class PaymentsController {
                 currency: req.body.currency,
                 service_type: req.body.service_type,
                 status: paymentStatus,
-                transaction_id: response.data && typeof response.data === 'object' && 'transaction_id' in response.data ? response.data.transaction_id : null
+                transaction_id: (response.data && typeof response.data === 'object' && 'transaction_id' in response.data && response.data.transaction_id) 
+                    ? response.data.transaction_id 
+                    : generateTransactionId()
             };
 
             // Guardar registro del pago en la base de datos
