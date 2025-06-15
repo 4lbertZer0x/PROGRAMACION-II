@@ -3,7 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Administración de pagos de 3D Print Lab para gestionar transacciones de servicios">
     <title>Administración de Pagos - 3D Print Lab</title>
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="Administración de Pagos - 3D Print Lab">
+    <meta property="og:description" content="Panel de administración para gestionar pagos y transacciones de servicios de impresión 3D.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="<%= typeof req !== 'undefined' ? req.protocol + '://' + req.get('host') + req.originalUrl : 'https://3dprintlab.com/admin/payments' %>">
+    <meta property="og:image" content="<%= typeof req !== 'undefined' ? req.protocol + '://' + req.get('host') : 'https://3dprintlab.com' %>/images/og-image.jpg">
+    <meta property="og:image:alt" content="3D Print Lab - Administración de Pagos">
+    <meta property="og:site_name" content="3D Print Lab">
+    <meta property="og:locale" content="es_ES">
+    
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Administración de Pagos - 3D Print Lab">
+    <meta name="twitter:description" content="Panel de administración para gestionar pagos y transacciones de servicios.">
+    <meta name="twitter:image" content="<%= typeof req !== 'undefined' ? req.protocol + '://' + req.get('host') : 'https://3dprintlab.com' %>/images/og-image.jpg">
+    
+    <!-- Additional SEO Meta Tags -->
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="canonical" href="<%= typeof req !== 'undefined' ? req.protocol + '://' + req.get('host') + req.originalUrl : 'https://3dprintlab.com/admin/payments' %>">
+    
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100">
@@ -14,19 +36,51 @@
                 <span class="bg-secondary/20 text-black px-3 py-1 rounded-full text-sm">Admin</span>
             </div>
             <div class="flex items-center space-x-4">
+                <% if (user) { %>
+                    <div class="flex items-center space-x-2 text-black">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                        </svg>
+                        <span><%= user.display_name || user.username %></span>
+                    </div>
+                <% } %>
                 <a href="/admin" class="text-black hover:text-secondary transition-colors flex items-center space-x-2">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 15l-3-3m0 0l3-3m-3 3h8M3 12a9 9 0 1118 0 9 9 0 01-18 0z"></path>
                     </svg>
                     <span>Volver al Panel</span>
                 </a>
+                <a href="/auth/logout" class="text-black hover:text-secondary transition-colors flex items-center space-x-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                    </svg>
+                    <span>Cerrar Sesión</span>
+                </a>
             </div>
         </div>
     </nav>
     <div class="container mx-auto px-4 py-8">
-        <h1 class="text-3xl font-bold mb-8">Administración de Pagos</h1>
+        <div class="flex justify-between items-center mb-8">
+            <h1 class="text-3xl font-bold">Administración de Pagos</h1>
+            <div class="flex space-x-4">
+                <input type="text" id="searchInput" placeholder="Buscar por email, titular, ID..." class="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:outline-none transition-all duration-300 w-64">
+                <select id="filterSelect" class="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:outline-none transition-all duration-300">
+                    <option value="all">Todos</option>
+                    <option value="today">Hoy</option>
+                    <option value="week">Esta semana</option>
+                    <option value="month">Este mes</option>
+                </select>
+                <select id="statusFilter" class="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:outline-none transition-all duration-300">
+                    <option value="all">Todos los estados</option>
+                    <option value="completed">Completado</option>
+                    <option value="pending">Pendiente</option>
+                    <option value="failed">Fallido</option>
+                </select>
+            </div>
+        </div>
 
-        <div class="bg-white rounded-lg shadow overflow-hidden">
+        <div class="bg-white rounded-lg shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl">
+            <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
@@ -41,27 +95,123 @@
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
                     </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    <% payments.forEach(payment => { %>
+                <tbody class="bg-white divide-y divide-gray-200" id="paymentsTableBody">
+                    <% if (payments && Array.isArray(payments) && payments.length > 0) { %>
+                        <% payments.forEach((payment, index) => { %>
+                            <tr class="payment-row hover:bg-gray-50 transition-colors duration-200" data-index="<%= index %>">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><%= payment.id || '-' %></td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><%= payment.transaction_id || 'N/A' %></td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><%= payment.email || '-' %></td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"><%= payment.cardholder_name || '-' %></td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">€<%= payment.amount || '0.00' %></td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><%= payment.currency || '-' %></td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><%= payment.service_type || '-' %></td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <% 
+                                        let statusClass = 'bg-gray-100 text-gray-800';
+                                        let status = payment.status || 'unknown';
+                                        if (status.toLowerCase() === 'completed' || status.toLowerCase() === 'success') {
+                                            statusClass = 'bg-green-100 text-green-800';
+                                        } else if (status.toLowerCase() === 'pending') {
+                                            statusClass = 'bg-yellow-100 text-yellow-800';
+                                        } else if (status.toLowerCase() === 'failed' || status.toLowerCase() === 'error') {
+                                            statusClass = 'bg-red-100 text-red-800';
+                                        }
+                                    %>
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full <%= statusClass %>">
+                                        <%= status %>
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <% if (payment.created_at) { %>
+                                        <%= new Date(payment.created_at).toLocaleString('es-ES', { day: 'numeric', month: 'numeric', year: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric', hour12: true }) %>
+                                    <% } else { %>
+                                        -
+                                    <% } %>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    <% } else { %>
                         <tr>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><%= payment.id %></td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><%= payment.transaction_id || 'N/A' %></td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><%= payment.email %></td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"><%= payment.cardholder_name %></td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><%= payment.amount.toFixed(2) %></td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><%= payment.currency %></td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><%= payment.service_type %></td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                    <%= payment.status %>
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><%= new Date(payment.created_at).toLocaleString() %></td>
+                            <td colspan="9" class="px-6 py-4 text-center text-sm text-gray-500">No hay pagos disponibles</td>
                         </tr>
-                    <% }); %>
+                    <% } %>
                 </tbody>
             </table>
+            </div>
         </div>
     </div>
+
+    <script src="https://unpkg.com/gsap@3.12.2/dist/gsap.min.js"></script>
+    <script>
+        // Animación de entrada para las filas
+        gsap.from('.payment-row', {
+            duration: 0.5,
+            opacity: 0,
+            y: 20,
+            stagger: 0.1,
+            ease: 'power2.out'
+        });
+
+        // Función para normalizar texto (remover acentos y convertir a minúsculas)
+        function normalizeText(text) {
+            return text.toLowerCase()
+                      .normalize('NFD')
+                      .replace(/[\u0300-\u036f]/g, '');
+        }
+
+        // Funcionalidad de búsqueda y filtrado
+        const searchInput = document.getElementById('searchInput');
+        const filterSelect = document.getElementById('filterSelect');
+        const statusFilter = document.getElementById('statusFilter');
+        const rows = document.querySelectorAll('.payment-row');
+
+        function filterPayments() {
+            const searchTerm = normalizeText(searchInput.value);
+            const filterValue = filterSelect.value;
+            const statusValue = statusFilter.value;
+            const now = new Date();
+
+            rows.forEach(row => {
+                const text = normalizeText(row.textContent);
+                const dateCell = row.querySelector('td:last-child').textContent;
+                const statusCell = normalizeText(row.querySelector('td:nth-child(8) span').textContent);
+                const date = dateCell !== '-' ? new Date(dateCell) : null;
+                let showByDate = true;
+                let showByStatus = true;
+
+                // Filtro por fecha
+                if (filterValue === 'today' && date) {
+                    showByDate = date.toDateString() === now.toDateString();
+                } else if (filterValue === 'week' && date) {
+                    const weekAgo = new Date(now - 7 * 24 * 60 * 60 * 1000);
+                    showByDate = date >= weekAgo;
+                } else if (filterValue === 'month' && date) {
+                    showByDate = date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
+                }
+
+                // Filtro por estado
+                if (statusValue !== 'all') {
+                    showByStatus = statusCell.includes(statusValue);
+                }
+
+                const show = text.includes(searchTerm) && showByDate && showByStatus;
+                row.style.display = show ? '' : 'none';
+
+                if (show) {
+                    gsap.to(row, {
+                        opacity: 1,
+                        y: 0,
+                        duration: 0.3,
+                        ease: 'power2.out'
+                    });
+                }
+            });
+        }
+
+        searchInput.addEventListener('input', filterPayments);
+        filterSelect.addEventListener('change', filterPayments);
+        statusFilter.addEventListener('change', filterPayments);
+    </script>
 </body>
 </html>
