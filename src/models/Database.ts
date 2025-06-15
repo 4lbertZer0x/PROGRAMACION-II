@@ -1,5 +1,5 @@
-import sqlite3 from 'sqlite3';
-import { Database as SQLiteDatabase } from 'sqlite3';
+import sqlite3, { Database as SQLiteDatabase } from 'sqlite3';
+import bcrypt from 'bcrypt';
 
 export class Database {
     private static instance: Database;
@@ -52,7 +52,13 @@ export class Database {
                 service TEXT,
                 created_at DATETIME DEFAULT '${defaultDate}'
             )
-        `);
+        `, (err) => {
+            if (err) {
+                console.error('Error al crear tabla contacts:', err);
+            } else {
+                console.log('✅ Tabla contacts creada/verificada correctamente');
+            }
+        });
 
         // Tabla de pagos
         this.db.run(`
@@ -67,7 +73,34 @@ export class Database {
                 transaction_id TEXT,
                 created_at DATETIME DEFAULT '${defaultDate}'
             )
-        `);
+        `, (err) => {
+            if (err) {
+                console.error('Error al crear tabla payments:', err);
+            } else {
+                console.log('✅ Tabla payments creada/verificada correctamente');
+            }
+        });
+
+        // Tabla de usuarios
+        this.db.run(`
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT UNIQUE NOT NULL,
+                password_hash TEXT,
+                google_id TEXT UNIQUE,
+                email TEXT,
+                display_name TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `, (err) => {
+            if (err) {
+                console.error('Error al crear tabla users:', err);
+            } else {
+                console.log('✅ Tabla users creada/verificada correctamente');
+                // Solo crear el admin después de que la tabla users esté creada
+                this.createDefaultAdmin();
+            }
+        });
         
         // Verificar si la columna transaction_id existe, si no, añadirla
         this.db.all("PRAGMA table_info(payments)", [], (err, rows) => {
@@ -90,6 +123,40 @@ export class Database {
                 });
             }
         });
+    }
+
+    private async createDefaultAdmin(): Promise<void> {
+        try {
+            // Verificar si ya existe un usuario admin
+            this.db.get('SELECT * FROM users WHERE username = ?', ['admin'], async (err, row) => {
+                if (err) {
+                    console.error('Error al verificar usuario admin:', err);
+                    return;
+                }
+                
+                if (!row) {
+                    // Crear hash de la contraseña
+                    const passwordHash = await bcrypt.hash('123', 12);
+                    
+                    // Insertar usuario administrador
+                    this.db.run(
+                        'INSERT INTO users (username, password_hash, email, display_name) VALUES (?, ?, ?, ?)',
+                        ['admin', passwordHash, 'admin@3dprintlab.com', 'Administrador'],
+                        function(err) {
+                            if (err) {
+                                console.error('Error al crear usuario administrador:', err);
+                            } else {
+                                console.log('✅ Usuario administrador creado exitosamente: admin/123');
+                            }
+                        }
+                    );
+                } else {
+                    console.log('ℹ️  Usuario administrador ya existe');
+                }
+            });
+        } catch (error) {
+            console.error('Error en createDefaultAdmin:', error);
+        }
     }
 
     public getDatabase(): SQLiteDatabase {
