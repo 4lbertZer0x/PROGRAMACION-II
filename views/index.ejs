@@ -4,7 +4,29 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Servicios profesionales de impresión 3D para prototipos y figuras personalizadas con diseño de alta calidad">
-    <title>3D Print Lab - Servicios de Impresión 3D</title>
+    <title><%= title || '3D Print Lab - Servicios de Impresión 3D' %></title>
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="<%= title || '3D Print Lab - Servicios de Impresión 3D' %>">
+    <meta property="og:description" content="Servicios profesionales de impresión 3D para prototipos y figuras personalizadas con diseño de alta calidad. Transformamos tus ideas en realidad con tecnología de vanguardia.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="<%= typeof req !== 'undefined' ? req.protocol + '://' + req.get('host') + req.originalUrl : 'https://3dprintlab.com' %>">
+    <meta property="og:image" content="<%= typeof req !== 'undefined' ? req.protocol + '://' + req.get('host') : 'https://3dprintlab.com' %>/images/og-image.jpg">
+    <meta property="og:image:alt" content="3D Print Lab - Servicios profesionales de impresión 3D">
+    <meta property="og:site_name" content="3D Print Lab">
+    <meta property="og:locale" content="es_ES">
+    
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="<%= title || '3D Print Lab - Servicios de Impresión 3D' %>">
+    <meta name="twitter:description" content="Servicios profesionales de impresión 3D para prototipos y figuras personalizadas con diseño de alta calidad.">
+    <meta name="twitter:image" content="<%= typeof req !== 'undefined' ? req.protocol + '://' + req.get('host') : 'https://3dprintlab.com' %>/images/og-image.jpg">
+    
+    <!-- Additional SEO Meta Tags -->
+    <meta name="keywords" content="impresión 3D, prototipos, figuras personalizadas, diseño 3D, servicios 3D, tecnología 3D">
+    <meta name="author" content="3D Print Lab">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="<%= typeof req !== 'undefined' ? req.protocol + '://' + req.get('host') + req.originalUrl : 'https://3dprintlab.com' %>">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="styles.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -98,7 +120,6 @@
                 <a href="#galeria" class="mobile-nav-link">Galería</a>
                 <a href="#testimonios" class="mobile-nav-link">Testimonios</a>
                 <a href="#contacto" class="mobile-nav-link">Contacto</a>
-                <a href="/admin" class="mobile-nav-link">Admin</a>
             </div>
         </div>
     </div>
