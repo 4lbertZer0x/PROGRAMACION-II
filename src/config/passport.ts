@@ -57,7 +57,7 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
         {
             clientID: process.env.GOOGLE_CLIENT_ID,
             clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-            callbackURL: process.env.GOOGLE_CALLBACK_URL || '/auth/google/callback'
+            callbackURL: 'https://threedprintlab-task4.onrender.com/auth/google/callback'
         },
         async (accessToken: string, refreshToken: string, profile: any, done) => {
             try {
